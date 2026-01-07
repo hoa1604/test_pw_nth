@@ -11,7 +11,6 @@
     "test:chromium": "npx playwright test --project=chromium",
     "test:firefox": "npx playwright test --project=firefox",
     "test:webkit": "npx playwright test --project=webkit",
-    "test:mobile": "npx playwright test --project=mobile-chrome",
     "test:api": "npx playwright test tests/api/",
     "test:ui-tests": "npx playwright test tests/ui/",
     "test:regression": "npx playwright test tests/regression/",
@@ -28,17 +27,7 @@
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "type-check": "tsc --noEmit"
   },
-  "keywords": [
-    "playwright",
-    "typescript",
-    "automation",
-    "testing",
-    "e2e",
-    "api-testing",
-    "cross-browser"
-  ],
-  "author": "Your Team",
-  "license": "MIT",
+  "author": "Nguyen Thi Hoa",
   "devDependencies": {
     "@playwright/test": "^1.40.1",
     "@types/node": "^20.8.0",

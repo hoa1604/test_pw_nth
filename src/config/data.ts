@@ -3,8 +3,8 @@ import { TestData } from '../types';
 export const testData: TestData = {
   users: {
     valid: {
-      username: process.env.TEST_USERNAME || 'testuser123',
-      password: process.env.TEST_PASSWORD || 'testpass123',
+      username: process.env.TEST_USERNAME || 'Username_02',
+      password: process.env.TEST_PASSWORD || '123456789',
       email: 'testuser123@example.com',
       firstName: 'Test',
       lastName: 'User',
@@ -12,7 +12,6 @@ export const testData: TestData = {
     invalid: {
       username: 'invaliduser',
       password: 'wrongpassword',
-      email: 'invalid@example.com',
     },
   },
   products: {
