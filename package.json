@@ -1,0 +1,57 @@
+{
+  "name": "playwright-automation-framework",
+  "version": "1.0.0",
+  "description": "Comprehensive Playwright TypeScript automation testing framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:firefox": "npx playwright test --project=firefox",
+    "test:webkit": "npx playwright test --project=webkit",
+    "test:mobile": "npx playwright test --project=mobile-chrome",
+    "test:api": "npx playwright test tests/api/",
+    "test:ui-tests": "npx playwright test tests/ui/",
+    "test:regression": "npx playwright test tests/regression/",
+    "test:smoke": "npx playwright test tests/ui/",
+    "report": "npx playwright show-report",
+    "install:browsers": "npx playwright install",
+    "install:deps": "npx playwright install-deps",
+    "test:parallel": "npx playwright test --workers=4",
+    "test:serial": "npx playwright test --workers=1",
+    "test:env:staging": "npm run test",
+    "test:env:prod": "npm run test",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "automation",
+    "testing",
+    "e2e",
+    "api-testing",
+    "cross-browser"
+  ],
+  "author": "Your Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.1",
+    "@types/node": "^20.8.0",
+    "typescript": "^5.2.2",
+    "eslint": "^8.50.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "prettier": "^3.0.3",
+    "dotenv": "^16.3.1"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "faker": "^6.6.6",
+    "@faker-js/faker": "^8.1.0"
+  }
+}

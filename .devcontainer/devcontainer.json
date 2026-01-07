@@ -1,0 +1,38 @@
+{
+  "name": "Playwright TypeScript Test Environment",
+  "image": "mcr.microsoft.com/playwright:v1.40.1-focal",
+  
+  // Configure VS Code settings and extensions
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-eslint",
+        "ms-vscode.vscode-json",
+        "ms-vscode.test-adapter-converter",        
+        "ms-playwright.playwright",
+        "redhat.vscode-yaml",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ],
+      "settings": {
+        "typescript.preferences.includePackageJsonAutoImports": "auto",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        },
+        "playwright.reuseBrowser": true,
+        "playwright.showTrace": true
+      }
+    }
+  },
+
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "bash .devcontainer/setup-env.sh",
+
+  // Use 'postStartCommand' to run commands after the container starts  
+  "postStartCommand": "echo '✅ DevContainer ready! Try: npm run test:ui'",
+  
+}
