@@ -19,7 +19,7 @@ on:
         type: choice
         options:
           - smoke
-          - regression  
+          - regression
           - ui
           - api
           - all
@@ -47,155 +47,158 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      - name: Install Playwright
+        run: npx playwright install
 
-    - name: Create output directories
-      run: |
-        mkdir -p test-results
-        mkdir -p playwright-report
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
 
-    - name: Set environment URL
-      id: set-env
-      run: |
-        case "${{ github.event.inputs.environment }}" in
-          "production")
-            echo "BASE_URL=https://demoblaze.com/" >> $GITHUB_ENV
-            echo "Testing on PRODUCTION environment" ;;
-          "staging")
-            echo "BASE_URL=https://staging.demoblaze.com/" >> $GITHUB_ENV
-            echo "Testing on STAGING environment" ;;
-          "development")
-            echo "BASE_URL=http://localhost:3000/" >> $GITHUB_ENV
-            echo "Testing on DEVELOPMENT environment" ;;
-        esac
+      - name: Create output directories
+        run: |
+          mkdir -p test-results
+          mkdir -p playwright-report
 
-    - name: Run tests based on tags and browser
-      run: |
-        echo "Running tests with:"
-        echo "  Environment: ${{ github.event.inputs.environment }}"
-        echo "  Tags: ${{ github.event.inputs.test_tags }}"
-        echo "  Browser: ${{ github.event.inputs.browser }}"
-        echo "  Workers: ${{ github.event.inputs.parallel_workers }}"
-        
-        # Set base command with workers
-        BASE_CMD="npx playwright test --workers=${{ github.event.inputs.parallel_workers }}"
-        
-        # Add browser selection
-        if [ "${{ github.event.inputs.browser }}" != "all" ]; then
-          BASE_CMD="$BASE_CMD --project=${{ github.event.inputs.browser }}"
-        fi
-        
-        # Add test tag selection and execute
-        case "${{ github.event.inputs.test_tags }}" in
-          "smoke")
-            echo "Running smoke tests..."
-            $BASE_CMD tests/ui/ ;;
-          "regression")
-            echo "Running regression tests..."
-            $BASE_CMD tests/regression/ ;;
-          "ui")
-            echo "Running UI tests..."
-            $BASE_CMD tests/ui/ ;;
-          "api")
-            echo "Running API tests..."
-            $BASE_CMD tests/api/ ;;
-          "all")
-            echo "Running all tests..."
-            $BASE_CMD ;;
-        esac
-      env:
-        BASE_URL: ${{ env.BASE_URL }}
+      - name: Set environment URL
+        id: set-env
+        run: |
+          case "${{ github.event.inputs.environment }}" in
+            "production")
+              echo "BASE_URL=https://demoblaze.com/" >> $GITHUB_ENV
+              echo "Testing on PRODUCTION environment" ;;
+            "staging")
+              echo "BASE_URL=https://staging.demoblaze.com/" >> $GITHUB_ENV
+              echo "Testing on STAGING environment" ;;
+            "development")
+              echo "BASE_URL=http://localhost:3000/" >> $GITHUB_ENV
+              echo "Testing on DEVELOPMENT environment" ;;
+          esac
 
-    - name: Generate test summary
-      if: always()
-      run: |
-        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Test Tags:** ${{ github.event.inputs.test_tags }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Browser:** ${{ github.event.inputs.browser }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Workers:** ${{ github.event.inputs.parallel_workers }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        if [ -f "test-results/results.json" ]; then
-          echo "Test results generated successfully" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "No test results found" >> $GITHUB_STEP_SUMMARY
-        fi
+      - name: Run tests based on tags and browser
+        run: |
+          echo "Running tests with:"
+          echo "  Environment: ${{ github.event.inputs.environment }}"
+          echo "  Tags: ${{ github.event.inputs.test_tags }}"
+          echo "  Browser: ${{ github.event.inputs.browser }}"
+          echo "  Workers: ${{ github.event.inputs.parallel_workers }}"
 
-    - name: Upload HTML Report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report-${{ github.event.inputs.environment }}-${{ github.event.inputs.test_tags }}-${{ github.event.inputs.browser }}
-        path: playwright-report/
-        retention-days: 30
+          # Set base command with workers
+          BASE_CMD="npx playwright test --workers=${{ github.event.inputs.parallel_workers }}"
 
-    - name: Upload Test Results  
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ github.event.inputs.environment }}-${{ github.event.inputs.test_tags }}-${{ github.event.inputs.browser }}
-        path: test-results/
-        retention-days: 30
+          # Add browser selection
+          if [ "${{ github.event.inputs.browser }}" != "all" ]; then
+            BASE_CMD="$BASE_CMD --project=${{ github.event.inputs.browser }}"
+          fi
 
-    - name: Comment PR with results
-      if: always() && github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          let status = 'Passed';
-          if ('${{ job.status }}' !== 'success') {
-            status = 'Failed';
-          }
-          
-          const comment = `## Playwright Test Results ${status}
-          
-          **Configuration:**
-          - Environment: ${{ github.event.inputs.environment }}
-          - Test Tags: ${{ github.event.inputs.test_tags }}
-          - Browser: ${{ github.event.inputs.browser }}
-          - Workers: ${{ github.event.inputs.parallel_workers }}
-          
-          [View detailed HTML report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          `;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+          # Add test tag selection and execute
+          case "${{ github.event.inputs.test_tags }}" in
+            "smoke")
+              echo "Running smoke tests..."
+              $BASE_CMD tests/ui/ ;;
+            "regression")
+              echo "Running regression tests..."
+              $BASE_CMD tests/regression/ ;;
+            "ui")
+              echo "Running UI tests..."
+              $BASE_CMD tests/ui/ ;;
+            "api")
+              echo "Running API tests..."
+              $BASE_CMD tests/api/ ;;
+            "all")
+              echo "Running all tests..."
+              $BASE_CMD ;;
+          esac
+        env:
+          BASE_URL: ${{ env.BASE_URL }}
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Tags:** ${{ github.event.inputs.test_tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Browser:** ${{ github.event.inputs.browser }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Workers:** ${{ github.event.inputs.parallel_workers }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "test-results/results.json" ]; then
+            echo "Test results generated successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No test results found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.event.inputs.environment }}-${{ github.event.inputs.test_tags }}-${{ github.event.inputs.browser }}
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.event.inputs.environment }}-${{ github.event.inputs.test_tags }}-${{ github.event.inputs.browser }}
+          path: test-results/
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let status = 'Passed';
+            if ('${{ job.status }}' !== 'success') {
+              status = 'Failed';
+            }
+
+            const comment = `## Playwright Test Results ${status}
+
+            **Configuration:**
+            - Environment: ${{ github.event.inputs.environment }}
+            - Test Tags: ${{ github.event.inputs.test_tags }}
+            - Browser: ${{ github.event.inputs.browser }}
+            - Workers: ${{ github.event.inputs.parallel_workers }}
+
+            [View detailed HTML report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
 
   notify:
     runs-on: ubuntu-latest
     needs: test
     if: always()
     steps:
-    - name: Send notification
-      run: |
-        if [ "${{ needs.test.result }}" == "success" ]; then
-          echo "Test run completed successfully!"
-          echo "Environment: ${{ github.event.inputs.environment }}"
-          echo "Tags: ${{ github.event.inputs.test_tags }}" 
-          echo "Browser: ${{ github.event.inputs.browser }}"
-        else
-          echo "Test run failed!"
-          echo "Please check the logs and reports for details."
-        fi
+      - name: Send notification
+        run: |
+          if [ "${{ needs.test.result }}" == "success" ]; then
+            echo "Test run completed successfully!"
+            echo "Environment: ${{ github.event.inputs.environment }}"
+            echo "Tags: ${{ github.event.inputs.test_tags }}" 
+            echo "Browser: ${{ github.event.inputs.browser }}"
+          else
+            echo "Test run failed!"
+            echo "Please check the logs and reports for details."
+          fi
